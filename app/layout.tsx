@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "@stream-io/video-react-sdk/dist/css/styles.css"
 import { ClerkProvider } from "@clerk/nextjs";
 const inter = Inter({ subsets: ["latin"] });
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: "Conversee",
   description: "Emphasizes conversation and interaction",
@@ -19,9 +20,9 @@ export default function RootLayout({
       <ClerkProvider
         appearance={{
           layout: {
-            logoImageUrl: '/svg/logo-no-background.svg',
-            logoPlacement:'inside',
-            logoLinkUrl:'/'
+            logoImageUrl: "/svg/logo-no-background.svg",
+            logoPlacement: "inside",
+            logoLinkUrl: "/",
           },
           variables: {
             colorText: "#fff",
@@ -34,7 +35,7 @@ export default function RootLayout({
       >
         <body className={`${inter.className} bg-dark-2`}>
           {children}
-          <Toaster duration={5000} />
+          <Toaster/>
         </body>
       </ClerkProvider>
     </html>
