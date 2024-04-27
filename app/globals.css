@@ -89,6 +89,9 @@
 .cl-button__manageAccount:hover {
   color: inherit !important;
 }
+.cl-navbarButton {
+  color: rgba(255, 255, 255, 0.64);
+}
 
 /* =============================== */
 
