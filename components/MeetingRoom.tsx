@@ -21,6 +21,8 @@ import { LayoutList, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import EndCallButton from "@/components/EndCallButton";
 import Loader from "@/components/Loader";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 type CallLayoutType = "grid" | "speacker-left" | "speacker-right";
 
@@ -28,6 +30,8 @@ const MeetingRoom = () => {
   const [layout, setLayout] = useState<CallLayoutType>("speacker-left");
   const [showparticipants, setShowparticipants] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
   const isPersonalRoom = !!searchParams.get("personal");
   const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
@@ -67,7 +71,12 @@ const MeetingRoom = () => {
         </div>
       </div>
       <div className="fixed bottom-0 flex w-full items-center justify-center gap-5 flex-wrap">
-        <CallControls />
+        <CallControls
+          onLeave={() => {
+            router.push("/");
+            toast({ title: "Call has ended. Thank you for joining!" });
+          }}
+        />
         <DropdownMenu>
           <div className="flex items-center">
             <DropdownMenuTrigger className="cursor-pointer rounded-2xl bg-[#19232d] px-4 py-2 hover:bg-[#4c535b]">
