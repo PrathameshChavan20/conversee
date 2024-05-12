@@ -18,8 +18,7 @@ const Page = () => {
 
   useEffect(() => {
     setNextMeeting(upcomingCalls ? upcomingCalls[0].state.startsAt : null);
-    console.log(nextMeeting);
-  }, [upcomingCalls]);
+  }, [upcomingCalls, nextMeeting]);
 
   return (
     <section className="flex size-full flex-col gap10 text-white">
