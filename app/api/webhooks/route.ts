@@ -3,9 +3,7 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 
 export const POST = async (req: Request) => {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
-
   if (!WEBHOOK_SECRET) {
     throw new Error("Clerk WEBHOOK_SECRET not found.");
   }
@@ -26,8 +24,6 @@ export const POST = async (req: Request) => {
   // Get the body
   const payload = await req.json();
   const body = JSON.stringify(payload);
-  console.log(body);
-
   // Create a new Svix instance with your secret.
   const wh = new Webhook(WEBHOOK_SECRET);
 
@@ -46,15 +42,17 @@ export const POST = async (req: Request) => {
       status: 400,
     });
   }
-
-  // Do something with the payload
-  // For this guide, you simply log the payload to the console
   const { id } = evt.data;
   const eventType = evt.type;
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
-  console.log("Webhook body:", body);
   if (evt.type === "user.updated") {
     console.log("-------User has been updated with userId:", evt.data.id);
+  }
+  if (evt.type === "user.created") {
+    console.log("-------User has been created with userId:", evt.data.id);
+  }
+  if (evt.type === "user.deleted") {
+    console.log("-------User has been deleted with userId:", evt.data.id);
   }
 
   return new Response("", { status: 200 });
