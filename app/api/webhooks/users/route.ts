@@ -1,6 +1,6 @@
-import { Webhook } from "svix";
+import { WebhookEvent, UserJSON } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
-import { WebhookEvent } from "@clerk/nextjs/server";
+import { Webhook } from "svix";
 
 export const POST = async (req: Request) => {
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
@@ -8,28 +8,21 @@ export const POST = async (req: Request) => {
     throw new Error("Clerk WEBHOOK_SECRET not found.");
   }
 
-  // Get the headers
   const headerPayload = headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
 
-  // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occured -- no svix headers", {
-      status: 400,
-    });
+    return new Response("Error occurred -- no svix headers", { status: 400 });
   }
 
-  // Get the body
   const payload = await req.json();
   const body = JSON.stringify(payload);
-  // Create a new Svix instance with your secret.
-  const wh = new Webhook(WEBHOOK_SECRET);
 
+  const wh = new Webhook(WEBHOOK_SECRET);
   let evt: WebhookEvent;
 
-  // Verify the payload with the headers
   try {
     evt = wh.verify(body, {
       "svix-id": svix_id,
@@ -38,22 +31,35 @@ export const POST = async (req: Request) => {
     }) as WebhookEvent;
   } catch (err) {
     console.error("Error verifying webhook:", err);
-    return new Response("Error occured", {
-      status: 400,
-    });
+    return new Response("Error occurred", { status: 400 });
   }
+
   const { id } = evt.data;
   const eventType = evt.type;
-  console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
-  if (evt.type === "user.updated") {
-    console.log("-------User has been updated with userId:", evt.data.id);
+  console.log(`Webhook with an ID of ${id} and type of ${eventType}`);
+
+  if (evt.type === "user.updated" || evt.type === "user.created") {
+    if (isUserData(evt.data)) {
+      const userEmail = evt.data.email_addresses[0]?.email_address;
+
+      if (userEmail) {
+        console.log(`Email for user ${id}: ${userEmail}`);
+        console.log(`Your account has been ${evt.type.split(".")[1]}.`);
+      } else {
+        console.error("No email address found for the user");
+      }
+    } else {
+      console.error("Invalid event data type");
+    }
   }
-  if (evt.type === "user.created") {
-    console.log("-------User has been created with userId:", evt.data.id);
-  }
+
   if (evt.type === "user.deleted") {
     console.log("-------User has been deleted with userId:", evt.data.id);
   }
 
   return new Response("", { status: 200 });
 };
+
+function isUserData(data: WebhookEvent["data"]): data is UserJSON {
+  return "email_addresses" in data;
+}
