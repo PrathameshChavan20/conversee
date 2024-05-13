@@ -17,7 +17,7 @@ const Page = () => {
   const [nextMeeting, setNextMeeting] = useState<Date | null | undefined>(null);
 
   useEffect(() => {
-    setNextMeeting(upcomingCalls ? upcomingCalls[0].state.startsAt : null);
+    setNextMeeting(upcomingCalls ? upcomingCalls[0]?.state?.startsAt : null);
   }, [upcomingCalls, nextMeeting]);
 
   return (
