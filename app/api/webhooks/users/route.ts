@@ -1,7 +1,10 @@
 import { WebhookEvent, UserJSON } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { Webhook } from "svix";
-
+import { sendEmail } from "@/utils/sendEmail";
+import { signUpEmailtemp } from "@/public/htmlFiles/welcomeEmail";
+import { userUpdateEmailTemp } from "@/public/htmlFiles/userUpdateEmail";
+// import { userDeleteEmailTemp } from "@/public/htmlFiles/userDeletionEmail";
 export const POST = async (req: Request) => {
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
   if (!WEBHOOK_SECRET) {
@@ -34,27 +37,52 @@ export const POST = async (req: Request) => {
     return new Response("Error occurred", { status: 400 });
   }
 
-  const { id } = evt.data;
-  const eventType = evt.type;
-  console.log(`Webhook with an ID of ${id} and type of ${eventType}`);
-
-  if (evt.type === "user.updated" || evt.type === "user.created") {
-    if (isUserData(evt.data)) {
-      const userEmail = evt.data.email_addresses[0]?.email_address;
-
-      if (userEmail) {
-        console.log(`Email for user ${id}: ${userEmail}`);
-        console.log(`Your account has been ${evt.type.split(".")[1]}.`);
-      } else {
-        console.error("No email address found for the user");
-      }
-    } else {
-      console.error("Invalid event data type");
+  if (isUserData(evt.data)) {
+    const userEmail = evt.data.email_addresses[0]?.email_address;
+    if (evt.type === "user.created") {
+      const template = await signUpEmailtemp(
+        evt.data.first_name + "\n" + evt.data.last_name,
+        process.env.NEXT_PUBLIC_BASE_URL as string
+      );
+      await sendEmail(
+        userEmail,
+        "Conversee Welcomes You! 🙏",
+        undefined,
+        template
+      ).then(() => {
+        console.log("Welcome Email has been sent to the " + userEmail);
+      });
     }
-  }
 
-  if (evt.type === "user.deleted") {
-    console.log("-------User has been deleted with userId:", evt.data.id);
+    if (evt.type === "user.updated") {
+      const template = await userUpdateEmailTemp(
+        evt.data.first_name + "\n" + evt.data.last_name
+      );
+      await sendEmail(
+        userEmail,
+        "Account Updated! ✔️",
+        undefined,
+        template
+      ).then(() => {
+        console.log("User updation Email has been sent to the " + userEmail);
+      });
+    }
+  } else {
+    console.log(evt.data.id);
+    // if (evt.type === "user.deleted") {
+    //   console.log("Inside the user.deleted");
+    //   const template = await userDeleteEmailTemp(
+    //     evt.data.first_name + "\n" + evt.data.last_name
+    //   );
+    //   await sendEmail(
+    //     userEmail,
+    //     "Account Deleted! 😔",
+    //     undefined,
+    //     template
+    //   ).then(() => {
+    //     console.log("User deletion Email has been sent to the " + userEmail);
+    //   });
+    // }
   }
 
   return new Response("", { status: 200 });
